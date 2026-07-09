@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lyrics Sync Visualizer</title>
+  <!-- Import Outfit Font from Google Fonts for a modern, sleek aesthetic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================================================
+       1. DESIGN SYSTEM & VARIABLE DEFINITIONS
+       ========================================================================== */
+    :root {
+      --bg-dark: #0a0a0c;
+      --panel-bg: rgba(22, 22, 28, 0.45);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --text-active: #ffffff;
+      --text-dim: rgba(255, 255, 255, 0.35);
+      --accent: #bc47ff; /* Vivid violet */
+      --accent-glow: rgba(188, 71, 255, 0.4);
+      --accent-secondary: #00f0ff; /* Electric cyan */
+      --player-height: 100px;
+      --font-main: 'Outfit', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg-dark);
+      color: var(--text-active);
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    /* ==========================================================================
+       2. AMBIENT ANIMATED BACKGROUND (Apple Music Style)
+       ========================================================================== */
+    .ambient-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 50%, #120e1f, var(--bg-dark));
+    }
+
+    .blob {
+      position: absolute;
+      width: 50vw;
+      height: 50vw;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      mix-blend-mode: screen;
+      animation: float-around 25s infinite ease-in-out;
+    }
+
+    .blob-1 {
+      background: radial-gradient(circle, var(--accent) 0%, rgba(0,0,0,0) 70%);
+      top: -10%;
+      left: -10%;
+      animation-duration: 30s;
+    }
+
+    .blob-2 {
+      background: radial-gradient(circle, var(--accent-secondary) 0%, rgba(0,0,0,0) 70%);
+      bottom: -10%;
+      right: -10%;
+      animation-duration: 25s;
+      animation-delay: -5s;
+    }
+
+    .blob-3 {
+      background: radial-gradient(circle, #ff2a74 0%, rgba(0,0,0,0) 70%);
+      top: 40%;
+      left: 30%;
+      animation-duration: 35s;
+      animation-delay: -10s;
+    }
+
+    @keyframes float-around {
+      0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+      33% { transform: translate(10vw, 15vh) scale(1.1) rotate(120deg); }
+      66% { transform: translate(-5vw, 5vh) scale(0.9) rotate(240deg); }
+      100% { transform: translate(0, 0) scale(1) rotate(360deg); }
+    }
+
+    /* ==========================================================================
+       3. APP HEADER
+       ========================================================================== */
+    header {
+      width: 100%;
+      max-width: 900px;
+      padding: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff 30%, var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand p {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--panel-border);
+      color: var(--text-active);
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-family: var(--font-main);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* ==========================================================================
+       4. LYRICS CONTAINER PANEL
+       ========================================================================== */
+    .main-container {
+      flex: 1;
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      padding: 0 24px;
+      margin-bottom: calc(var(--player-height) + 20px);
+    }
+
+    /* Gradient masks to fade lyrics out at the top and bottom of scroll area */
+    .lyrics-wrapper {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 24px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .lyrics-wrapper::before,
+    .lyrics-wrapper::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 120px;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .lyrics-wrapper::before {
+      top: 0;
+      background: linear-gradient(to bottom, rgba(15, 15, 18, 0.95) 0%, rgba(15, 15, 18, 0) 100%);
+    }
+
+    .lyrics-wrapper::after {
+      bottom: 0;
+      background: linear-gradient(to top, rgba(15, 15, 18, 0.95) 0%, rgba(15, 15, 18, 0) 100%);
+    }
+
+    .lyrics-scroll-box {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      padding: 200px 24px; /* Big padding to allow top/bottom lines to center perfectly */
+      scrollbar-width: none; /* Firefox */
+    }
+
+    .lyrics-scroll-box::-webkit-scrollbar {
+      display: none; /* Safari & Chrome */
+    }
+
+    /* Individual lyric lines */
+    .lyric-line {
+      font-size: 1.65rem;
+      font-weight: 600;
+      line-height: 1.5;
+      color: var(--text-dim);
+      padding: 16px 20px;
+      margin: 12px 0;
+      border-radius: 16px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+      transform-origin: center center;
+      filter: blur(1px);
+      user-select: none;
+    }
+
+    .lyric-line:hover {
+      color: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.03);
+      filter: blur(0px);
+    }
+
+    /* Highlighted active lyric style */
+    .lyric-line.active {
+      color: var(--text-active);
+      font-size: 2.1rem;
+      font-weight: 800;
+      filter: blur(0px);
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.15), 0 0 35px var(--accent-glow);
+      transform: scale(1.03);
+      background: transparent;
+    }
+
+    /* Instrumental / Pause screen indicators */
+    .lyric-line.instrumental {
+      font-style: italic;
+      font-weight: 400;
+      font-size: 1.2rem;
+      opacity: 0.6;
+    }
+
+    /* Empty state when lyrics haven't loaded */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      color: var(--text-dim);
+      padding: 40px;
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+      stroke: var(--accent);
+    }
+
+    /* ==========================================================================
+       5. PREMIUM AUDIO CONTROLLER (Bottom Bar)
+       ========================================================================== */
+    .player-dock {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 48px);
+      max-width: 900px;
+      height: var(--player-height);
+      background: rgba(18, 18, 22, 0.7);
+      backdrop-filter: blur(30px) saturate(200%);
+      -webkit-backdrop-filter: blur(30px) saturate(200%);
+      border: 1px solid var(--panel-border);
+      border-radius: 24px;
+      z-index: 100;
+      padding: 12px 24px;
+      display: grid;
+      grid-template-columns: 240px 1fr 200px;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Left segment: Song metadata */
+    .song-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .album-art {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 16px rgba(188, 71, 255, 0.25);
+      position: relative;
+    }
+
+    /* Dynamic visualizer animation inside cover art when playing */
+    .art-visualizer {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 18px;
+    }
+
+    .art-bar {
+      width: 3px;
+      height: 100%;
+      background-color: white;
+      border-radius: 2px;
+      transform-origin: bottom;
+      animation: bounce 0.8s ease-in-out infinite alternate;
+      animation-play-state: paused;
+    }
+
+    .art-bar:nth-child(2) { animation-delay: 0.15s; }
+    .art-bar:nth-child(3) { animation-delay: 0.3s; }
+    .art-bar:nth-child(4) { animation-delay: 0.45s; }
+
+    body.playing .art-bar {
+      animation-play-state: running;
+    }
+
+    @keyframes bounce {
+      0% { transform: scaleY(0.2); }
+      100% { transform: scaleY(1.0); }
+    }
+
+    .song-details {
+      display: flex;
+      flex-direction: column;
+      min-width: 0; /* allows text-overflow ellipsis */
+    }
+
+    .song-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .song-artist {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    /* Center segment: Playback controls + seeker */
+    .player-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-icon {
+      background: transparent;
+      border: none;
+      color: var(--text-active);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+    }
+
+    .btn-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+      stroke: currentColor;
+      stroke-width: 0;
+    }
+
+    .btn-icon:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: scale(1.05);
+    }
+
+    .btn-icon:active {
+      transform: scale(0.95);
+    }
+
+    .btn-play-pause {
+      background: var(--text-active);
+      color: var(--bg-dark);
+      width: 44px;
+      height: 44px;
+    }
+
+    .btn-play-pause:hover {
+      background: #ffffff;
+      color: var(--bg-dark);
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+      transform: scale(1.08);
+    }
+
+    .timeline-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .time-stamp {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-variant-numeric: tabular-nums;
+      width: 35px;
+    }
+
+    .time-stamp.current {
+      text-align: right;
+    }
+
+    .slider-container {
+      position: relative;
+      flex: 1;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    /* Custom range input styling */
+    .range-input {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+      position: relative;
+    }
+
+    /* Fill tracking logic done via CSS background-image in script */
+    .range-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--text-active);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+      transition: transform 0.1s ease;
+    }
+
+    .range-input:hover::-webkit-slider-thumb {
+      transform: scale(1.3);
+      background: var(--accent-secondary);
+    }
+
+    .range-input::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border: none;
+      border-radius: 50%;
+      background: var(--text-active);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+      transition: transform 0.1s ease;
+    }
+
+    .range-input:hover::-moz-range-thumb {
+      transform: scale(1.3);
+      background: var(--accent-secondary);
+    }
+
+    /* Right segment: Volume & additional utilities */
+    .player-right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .volume-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 120px;
+    }
+
+    .volume-box .range-input {
+      height: 3px;
+    }
+
+    /* Hide standard audio elements since we control via JS */
+    #audio-engine {
+      display: none;
+    }
+
+    /* ==========================================================================
+       6. MODALS / SIDE PANELS (Custom File Importer)
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(5, 5, 8, 0.85);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: rgba(25, 25, 35, 0.95);
+      border: 1px solid var(--panel-border);
+      border-radius: 24px;
+      width: 90%;
+      max-width: 500px;
+      padding: 30px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-overlay.open .modal-card {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .close-btn:hover {
+      color: var(--text-active);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .import-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .file-drop-zone {
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .file-drop-zone:hover {
+      border-color: var(--accent-secondary);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .file-drop-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(188, 71, 255, 0.08);
+    }
+
+    .file-drop-zone label {
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .file-drop-zone label svg {
+      width: 32px;
+      height: 32px;
+      stroke: var(--text-dim);
+      transition: stroke 0.2s ease;
+    }
+
+    .file-drop-zone:hover label svg {
+      stroke: var(--accent-secondary);
+    }
+
+    .file-drop-zone span {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    .file-drop-zone .file-name {
+      color: var(--accent-secondary);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .file-drop-zone input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .instructions-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+
+    .instructions-box code {
+      color: var(--accent-secondary);
+      background: rgba(0, 240, 255, 0.1);
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    /* ==========================================================================
+       7. MOBILE RESPONSIVENESS
+       ========================================================================== */
+    @media (max-width: 768px) {
+      header {
+        padding: 16px;
+      }
+      
+      .brand h1 {
+        font-size: 1.25rem;
+      }
+
+      .btn-secondary {
+        padding: 8px 12px;
+        font-size: 0.75rem;
+      }
+
+      .main-container {
+        padding: 0 12px;
+        margin-bottom: calc(var(--player-height) + 16px);
+      }
+
+      .lyrics-scroll-box {
+        padding: 160px 12px;
+      }
+
+      .lyric-line {
+        font-size: 1.3rem;
+        padding: 12px 10px;
+        margin: 8px 0;
+      }
+
+      .lyric-line.active {
+        font-size: 1.65rem;
+      }
+
+      /* Compact Player for Mobile Screens */
+      .player-dock {
+        width: calc(100% - 24px);
+        bottom: 12px;
+        grid-template-columns: 1fr 50px; /* Collapse elements */
+        grid-template-rows: auto auto;
+        gap: 8px;
+        padding: 12px;
+        height: auto;
+      }
+
+      .song-info {
+        grid-column: 1 / 2;
+        grid-row: 1 / 2;
+      }
+
+      .player-right {
+        display: none; /* Hide volume controls on mobile - native device buttons usually used */
+      }
+
+      .player-center {
+        grid-column: 1 / 3;
+        grid-row: 2 / 3;
+        width: 100%;
+      }
+
+      .controls-row {
+        grid-column: 2 / 3;
+        grid-row: 1 / 2;
+        margin-left: auto;
+      }
+
+      .btn-play-pause {
+        width: 38px;
+        height: 38px;
+      }
+
+      .btn-icon svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Canvas circles for smooth colorful glow effects -->
+  <div class="ambient-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Audio Element -->
+  <audio id="audio-engine" preload="auto">
+    <!-- Default audio placeholder -->
+    <source id="audio-src" src="audio/song.mp3" type="audio/mp3">
+  </audio>
+
+  <!-- Navigation/Header -->
+  <header>
+    <div class="brand">
+      <h1>Lyrics Sync Visualizer</h1>
+      <p id="song-meta-display">Ready for playback</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary" id="open-importer-btn">
+        <!-- Folder Icon -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        Load Song
+      </button>
+    </div>
+  </header>
+
+  <!-- Lyrics Container Panel -->
+  <main class="main-container">
+    <div class="lyrics-wrapper">
+      <div class="lyrics-scroll-box" id="lyrics-viewport">
+        <!-- Render empty states until files load or defaults kick in -->
+        <div class="empty-state" id="empty-view">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"></path>
+            <circle cx="6" cy="18" r="3"></circle>
+            <circle cx="18" cy="16" r="3"></circle>
+          </svg>
+          <h3>Welcome to the Lyrics Visualizer</h3>
+          <p style="margin-top: 8px; font-size: 0.85rem; max-width: 320px;">
+            Load an MP3 & a matching JSON file, or play the preloaded demo directly.
+          </p>
+          <button class="btn-secondary" id="load-demo-btn" style="margin-top: 20px;">
+            Play Demo Song
+          </button>
+        </div>
+        
+        <!-- Lyric lines are dynamically populated here -->
+        <div id="lyrics-lines-container" style="display: none;"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Custom Styled Audio Control Bar -->
+  <footer class="player-dock">
+    
+    <!-- Left: Song details -->
+    <div class="song-info">
+      <div class="album-art" id="art-box">
+        <div class="art-visualizer">
+          <div class="art-bar"></div>
+          <div class="art-bar"></div>
+          <div class="art-bar"></div>
+          <div class="art-bar"></div>
+        </div>
+      </div>
+      <div class="song-details">
+        <span class="song-title" id="track-title">No Audio Loaded</span>
+        <span class="song-artist" id="track-artist">Select a file to begin</span>
+      </div>
+    </div>
+
+    <!-- Center: Playback control buttons and Seeker timeline -->
+    <div class="player-center">
+      <div class="controls-row">
+        <!-- Restart Button -->
+        <button class="btn-icon" id="btn-restart" title="Restart Song">
+          <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+        </button>
+        <!-- Play / Pause Button -->
+        <button class="btn-icon btn-play-pause" id="btn-play-pause" title="Play">
+          <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="pause-icon" viewBox="0 0 24 24" style="display: none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+      </div>
+      
+      <div class="timeline-row">
+        <span class="time-stamp current" id="time-current">0:00</span>
+        <div class="slider-container">
+          <input type="range" class="range-input" id="playback-slider" min="0" max="100" value="0">
+        </div>
+        <span class="time-stamp duration" id="time-duration">0:00</span>
+      </div>
+    </div>
+
+    <!-- Right: Volume controls -->
+    <div class="player-right">
+      <div class="volume-box">
+        <!-- Volume Icon -->
+        <button class="btn-icon" id="btn-mute" style="width: 28px; height: 28px;">
+          <svg id="volume-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        </button>
+        <input type="range" class="range-input" id="volume-slider" min="0" max="1" step="0.05" value="0.8">
+      </div>
+    </div>
+  </footer>
+
+  <!-- File Upload Drawer Modal -->
+  <div class="modal-overlay" id="importer-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Load Custom Song & Lyrics</h2>
+        <button class="close-btn" id="close-modal-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      
+      <div class="import-fields">
+        <!-- Audio selector -->
+        <div class="file-drop-zone" id="audio-dropzone">
+          <label>
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+            <span>Select/Drop audio (.mp3, .wav, .m4a)</span>
+            <span class="file-name" id="audio-file-label">None selected</span>
+          </label>
+          <input type="file" id="audio-file-input" accept="audio/*">
+        </div>
+
+        <!-- Lyrics JSON selector -->
+        <div class="file-drop-zone" id="lyrics-dropzone">
+          <label>
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+            <span>Select/Drop lyrics (.json)</span>
+            <span class="file-name" id="lyrics-file-label">None selected</span>
+          </label>
+          <input type="file" id="lyrics-file-input" accept=".json">
+        </div>
+      </div>
+
+      <div class="instructions-box">
+        <strong>JSON Format requirements:</strong>
+        <p style="margin-top: 4px;">Must contain an array of objects specifying <code>time</code> (seconds) and <code>text</code> (lyrics line):</p>
+        <pre style="margin-top: 6px; font-family: monospace; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 6px; overflow-x: auto; color: #dfa6ff;">[
+  { "time": 0.0, "text": "🎵 Intro Instrumental 🎵" },
+  { "time": 5.2, "text": "First line of the song" }
+]</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+     8. JAVASCRIPT LOGIC
+     ========================================================================== -->
+  <script>
+    /* --------------------------------------------------------------------------
+       8a. PLACEHOLDER & DEMO DATASET
+       -------------------------------------------------------------------------- */
+    // Default placeholder lyrics. Used when displaying the interactive demo
+    const DEFAULT_LYRICS = [
+      { "time": 0.0, "text": "🎵 (Smooth ambient synth intro) 🎵" },
+      { "time": 4.5, "text": "Welcome to your new Lyrics Sync Visualizer" },
+      { "time": 8.5, "text": "Designed with a fluid, dark glassmorphic design" },
+      { "time": 13.0, "text": "Highlighting lyrics perfectly in sync with the beats" },
+      { "time": 18.2, "text": "Notice how inactive lines are blurred and dimmed" },
+      { "time": 22.8, "text": "While the active line glows, scales up, and stays centered" },
+      { "time": 27.5, "text": "You can click on any line to seek playback instantly!" },
+      { "time": 32.0, "text": "Go ahead, try clicking a line above or below this one" },
+      { "time": 37.0, "text": "🎵 (Short instrumental break) 🎵" },
+      { "time": 43.5, "text": "You can also load your own MP3 and JSON files" },
+      { "time": 48.0, "text": "Click the 'Load Song' button in the top right corner" },
+      { "time": 52.8, "text": "Drag in your song and custom JSON coordinates" },
+      { "time": 58.0, "text": "Built for pair programming visual excellence" },
+      { "time": 63.5, "text": "🎵 (Outro fade out) 🎵" }
+    ];
+
+    // Online fallback royalty-free track so the app functions instantly in a sandbox
+    const DEMO_AUDIO_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+    const PLACEHOLDER_AUDIO_URL = "audio/song.mp3";
+
+    /* --------------------------------------------------------------------------
+       8b. STATE VARIABLES
+       -------------------------------------------------------------------------- */
+    let lyrics = [...DEFAULT_LYRICS];
+    let currentLineIndex = -1;
+    let isMuted = false;
+    let lastVolume = 0.8;
+    let isDraggingSlider = false;
+
+    /* --------------------------------------------------------------------------
+       8c. DOM ELEMENT REFERENCES
+       -------------------------------------------------------------------------- */
+    const audio = document.getElementById('audio-engine');
+    const audioSource = document.getElementById('audio-src');
+    const playPauseBtn = document.getElementById('btn-play-pause');
+    const playIcon = document.getElementById('play-icon');
+    const pauseIcon = document.getElementById('pause-icon');
+    const restartBtn = document.getElementById('btn-restart');
+    const muteBtn = document.getElementById('btn-mute');
+    const volumeIcon = document.getElementById('volume-icon');
+    const volumeSlider = document.getElementById('volume-slider');
+    const playbackSlider = document.getElementById('playback-slider');
+    const timeCurrent = document.getElementById('time-current');
+    const timeDuration = document.getElementById('time-duration');
+    const trackTitle = document.getElementById('track-title');
+    const trackArtist = document.getElementById('track-artist');
+    const songMetaDisplay = document.getElementById('song-meta-display');
+    
+    // View containers
+    const emptyView = document.getElementById('empty-view');
+    const lyricsContainer = document.getElementById('lyrics-lines-container');
+    const lyricsViewport = document.getElementById('lyrics-viewport');
+    const loadDemoBtn = document.getElementById('load-demo-btn');
+    
+    // Modal controls
+    const openImporterBtn = document.getElementById('open-importer-btn');
+    const closeImporterBtn = document.getElementById('close-modal-btn');
+    const importerModal = document.getElementById('importer-modal');
+    
+    // File inputs
+    const audioFileInput = document.getElementById('audio-file-input');
+    const lyricsFileInput = document.getElementById('lyrics-file-input');
+    const audioFileLabel = document.getElementById('audio-file-label');
+    const lyricsFileLabel = document.getElementById('lyrics-file-label');
+    const audioDropzone = document.getElementById('audio-dropzone');
+    const lyricsDropzone = document.getElementById('lyrics-dropzone');
+
+    /* --------------------------------------------------------------------------
+       8d. INITIALIZATION & SETUP
+       -------------------------------------------------------------------------- */
+    window.addEventListener('DOMContentLoaded', () => {
+      setupEventListeners();
+      updateSliderBackground(volumeSlider);
+      updateSliderBackground(playbackSlider);
+      
+      // Default info labels
+      trackTitle.textContent = "Song Placeholder";
+      trackArtist.textContent = "Replace with audio/song.mp3";
+    });
+
+    /* --------------------------------------------------------------------------
+       8e. EVENT BINDING
+       -------------------------------------------------------------------------- */
+    function setupEventListeners() {
+      // Audio Engine Events
+      audio.addEventListener('timeupdate', handleTimeUpdate);
+      audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.addEventListener('play', () => {
+        document.body.classList.add('playing');
+        playIcon.style.display = 'none';
+        pauseIcon.style.display = 'block';
+      });
+      audio.addEventListener('pause', () => {
+        document.body.classList.remove('playing');
+        playIcon.style.display = 'block';
+        pauseIcon.style.display = 'none';
+      });
+      audio.addEventListener('volumechange', syncVolumeUI);
+      audio.addEventListener('ended', () => {
+        audio.pause();
+        audio.currentTime = 0;
+        updateActiveLyricLine();
+      });
+
+      // Custom Media Player Controls
+      playPauseBtn.addEventListener('click', togglePlay);
+      restartBtn.addEventListener('click', restartPlayback);
+      
+      // Seeker Inputs
+      playbackSlider.addEventListener('input', (e) => {
+        isDraggingSlider = true;
+        timeCurrent.textContent = formatTime(e.target.value);
+        updateSliderBackground(playbackSlider);
+      });
+      playbackSlider.addEventListener('change', (e) => {
+        audio.currentTime = e.target.value;
+        isDraggingSlider = false;
+      });
+
+      // Volume Slider
+      volumeSlider.addEventListener('input', (e) => {
+        audio.volume = e.target.value;
+        isMuted = (audio.volume === 0);
+      });
+      muteBtn.addEventListener('click', toggleMute);
+
+      // Loading Demo
+      loadDemoBtn.addEventListener('click', loadDemoPlayback);
+
+      // Modal Open/Close
+      openImporterBtn.addEventListener('click', () => importerModal.classList.add('open'));
+      closeImporterBtn.addEventListener('click', () => importerModal.classList.remove('open'));
+      
+      // Click outside modal card to close
+      importerModal.addEventListener('click', (e) => {
+        if (e.target === importerModal) {
+          importerModal.classList.remove('open');
+        }
+      });
+
+      // Custom File Selection Event Handlers
+      audioFileInput.addEventListener('change', handleAudioUpload);
+      lyricsFileInput.addEventListener('change', handleLyricsUpload);
+
+      // Drag and Drop Effects
+      setupDragDrop(audioDropzone, audioFileInput);
+      setupDragDrop(lyricsDropzone, lyricsFileInput);
+    }
+
+    /* --------------------------------------------------------------------------
+       8f. AUDIO CONTROL LOGIC
+       -------------------------------------------------------------------------- */
+    function togglePlay() {
+      // If audio is empty or load fails, auto-alert to load
+      if (!audio.src || audio.src.includes('audio/song.mp3') && audio.readyState === 0) {
+        // Attempt a load first. If it fails, fall back to offering the demo track
+        audio.play().catch(err => {
+          showDemoChoiceAlert();
+        });
+      } else {
+        if (audio.paused) {
+          audio.play().catch(e => console.error("Playback failed:", e));
+        } else {
+          audio.pause();
+        }
+      }
+    }
+
+    // Restart the song from the beginning
+    function restartPlayback() {
+      audio.currentTime = 0;
+      if (audio.paused) {
+        audio.play().catch(e => console.error(e));
+      }
+    }
+
+    function toggleMute() {
+      if (isMuted) {
+        audio.volume = lastVolume;
+        isMuted = false;
+      } else {
+        lastVolume = audio.volume;
+        audio.volume = 0;
+        isMuted = true;
+      }
+    }
+
+    function syncVolumeUI() {
+      volumeSlider.value = audio.volume;
+      updateSliderBackground(volumeSlider);
+      
+      if (audio.volume === 0) {
+        // Mute Icon SVG
+        volumeIcon.innerHTML = `<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>`;
+      } else if (audio.volume < 0.5) {
+        // Medium Volume Icon SVG
+        volumeIcon.innerHTML = `<path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/>`;
+      } else {
+        // Loud Volume Icon SVG
+        volumeIcon.innerHTML = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+      }
+    }
+
+    function handleLoadedMetadata() {
+      playbackSlider.max = Math.floor(audio.duration);
+      timeDuration.textContent = formatTime(audio.duration);
+      updateSliderBackground(playbackSlider);
+    }
+
+    /* --------------------------------------------------------------------------
+       8g. SYNC LOGIC (The Core Feature)
+       -------------------------------------------------------------------------- */
+    
+    /**
+     * timeupdate Event Handler:
+     * This fires multiple times a second as the track progresses.
+     * We match `audio.currentTime` with the lyrics dataset to select
+     * the active sentence and trigger the visual animations.
+     */
+    function handleTimeUpdate() {
+      if (isDraggingSlider) return;
+
+      const currentTime = audio.currentTime;
+      
+      // Update custom Seeker Bar UI
+      playbackSlider.value = Math.floor(currentTime);
+      timeCurrent.textContent = formatTime(currentTime);
+      updateSliderBackground(playbackSlider);
+
+      // Search for the current active lyric line index.
+      // We look for the lyric line whose 'time' stamp is less than or equal to the current playback head
+      // and which has the highest timestamp value among all such elements.
+      let matchingIndex = -1;
+      
+      for (let i = 0; i < lyrics.length; i++) {
+        if (currentTime >= lyrics[i].time) {
+          matchingIndex = i;
+        } else {
+          break; // Since our array is sorted by 'time', we can exit early.
+        }
+      }
+
+      // If the matched index has changed, update the UI highlight & center-scroll
+      if (matchingIndex !== currentLineIndex) {
+        currentLineIndex = matchingIndex;
+        updateActiveLyricLine();
+      }
+    }
+
+    /**
+     * Updates the DOM to visually focus and center-scroll the active lyric element.
+     */
+    function updateActiveLyricLine() {
+      // Fetch all rendered lyric lines
+      const lines = lyricsContainer.querySelectorAll('.lyric-line');
+      if (lines.length === 0) return;
+
+      lines.forEach((line, index) => {
+        if (index === currentLineIndex) {
+          line.classList.add('active');
+          
+          // Smooth scroll the active element into the vertical center of the scroll view
+          line.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        } else {
+          line.classList.remove('active');
+        }
+      });
+    }
+
+    /**
+     * Populates the HTML lyrics box with our JSON lyrics representation.
+     */
+    function renderLyrics() {
+      lyricsContainer.innerHTML = '';
+      
+      if (!lyrics || lyrics.length === 0) {
+        emptyView.style.display = 'flex';
+        lyricsContainer.style.display = 'none';
+        return;
+      }
+
+      emptyView.style.display = 'none';
+      lyricsContainer.style.display = 'block';
+
+      lyrics.forEach((line, index) => {
+        const div = document.createElement('div');
+        div.className = 'lyric-line';
+        
+        // Detect instrumental flags
+        if (line.text.includes('🎵') || line.text.includes('(Instrumental)')) {
+          div.classList.add('instrumental');
+        }
+        
+        div.id = `lyric-line-${index}`;
+        div.textContent = line.text;
+        
+        // INTERACTIVE SEEKING:
+        // Clicking any line instantly updates the player's timestamp to sync with that line.
+        div.addEventListener('click', () => {
+          audio.currentTime = line.time;
+          // Trigger instant highlight updates
+          handleTimeUpdate();
+          if (audio.paused) {
+            audio.play().catch(err => console.error("Playback start error:", err));
+          }
+        });
+
+        lyricsContainer.appendChild(div);
+      });
+
+      // Reset markers
+      currentLineIndex = -1;
+      handleTimeUpdate();
+    }
+
+    /* --------------------------------------------------------------------------
+       8h. EXTERNAL FILE IMPORTERS & DEMO LOADER
+       -------------------------------------------------------------------------- */
+    
+    /**
+     * Configures drag-over and drop styles for files.
+     */
+    function setupDragDrop(zone, input) {
+      zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zone.classList.add('dragover');
+      });
+
+      zone.addEventListener('dragleave', () => {
+        zone.classList.remove('dragover');
+      });
+
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) {
+          input.files = e.dataTransfer.files;
+          // Dispatch change event manually
+          input.dispatchEvent(new Event('change'));
+        }
+      });
+    }
+
+    /**
+     * Parses uploaded local MP3 binary files to object URLs.
+     */
+    function handleAudioUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      audioFileLabel.textContent = file.name;
+      
+      // Convert browser file handle to object URI source
+      const fileURL = URL.createObjectURL(file);
+      audio.src = fileURL;
+      audio.load();
+
+      // Update player titles
+      const cleanName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+      trackTitle.textContent = cleanName;
+      trackArtist.textContent = "Local Audio File";
+      songMetaDisplay.textContent = `File: ${file.name}`;
+      
+      // Auto close importer if lyrics are also parsed
+      checkAutoCloseModal();
+    }
+
+    /**
+     * Reads and parses local JSON file contents as lyrics structures.
+     */
+    function handleLyricsUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      lyricsFileLabel.textContent = file.name;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          
+          // Validate schema
+          if (Array.isArray(parsed) && parsed.every(item => 'time' in item && 'text' in item)) {
+            // Sort array ascending by time
+            lyrics = parsed.sort((a, b) => a.time - b.time);
+            
+            // Re-render
+            renderLyrics();
+            
+            // Auto close modal if audio is also ready
+            checkAutoCloseModal();
+          } else {
+            alert("Invalid JSON format! Must be an array of structures: { time: Number, text: String }");
+            lyricsFileLabel.textContent = "Invalid format";
+          }
+        } catch(err) {
+          alert("Error parsing JSON: " + err.message);
+          lyricsFileLabel.textContent = "Error parsing file";
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function checkAutoCloseModal() {
+      // Auto close importer modal once both files are queued
+      if (audioFileInput.files.length > 0 && lyricsFileInput.files.length > 0) {
+        setTimeout(() => {
+          importerModal.classList.remove('open');
+        }, 800);
+      }
+    }
+
+    /**
+     * Triggers online fallback demo playback.
+     */
+    function loadDemoPlayback() {
+      trackTitle.textContent = "SoundHelix Song 1";
+      trackArtist.textContent = "SoundHelix (Royalty-free)";
+      songMetaDisplay.textContent = "Demo Song (Requires Internet)";
+      
+      lyrics = [...DEFAULT_LYRICS];
+      renderLyrics();
+
+      audio.src = DEMO_AUDIO_URL;
+      audio.load();
+      audio.play().catch(e => {
+        alert("Unable to play demo audio URL. Please check your internet connection or upload local files.");
+      });
+    }
+
+    function showDemoChoiceAlert() {
+      if (confirm("Default 'audio/song.mp3' file not found.\n\nWould you like to play the interactive Demo Song (loads online audio automatically) instead?")) {
+        loadDemoPlayback();
+      }
+    }
+
+    /* --------------------------------------------------------------------------
+       8i. UTILITIES & MATH
+       -------------------------------------------------------------------------- */
+    
+    /**
+     * Formats duration/time seconds integer/float to mm:ss notation.
+     */
+    function formatTime(secs) {
+      if (isNaN(secs)) return "0:00";
+      const minutes = Math.floor(secs / 60);
+      const seconds = Math.floor(secs % 60);
+      return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    /**
+     * Fills the slider color dynamically behind range inputs.
+     */
+    function updateSliderBackground(slider) {
+      const min = slider.min || 0;
+      const max = slider.max || 100;
+      const value = slider.value;
+      const percent = ((value - min) / (max - min)) * 100;
+      
+      // Paint neon colored tracking trace line
+      slider.style.backgroundImage = `linear-gradient(to right, var(--accent-secondary) 0%, var(--accent-secondary) ${percent}%, rgba(255, 255, 255, 0.15) ${percent}%, rgba(255, 255, 255, 0.15) 100%)`;
+    }
+  </script>
+</body>
+</html>
