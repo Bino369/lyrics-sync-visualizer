@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-  
+  <!-- YouTube IFrame Player API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
   <style>
     /* ==========================================================================
        1. DESIGN SYSTEM & VARIABLE DEFINITIONS
@@ -19,9 +22,11 @@
       --panel-border: rgba(255, 255, 255, 0.08);
       --text-active: #ffffff;
       --text-dim: rgba(255, 255, 255, 0.35);
-      --accent: #bc47ff; /* Vivid violet */
+      --accent: #bc47ff;
+      /* Vivid violet */
       --accent-glow: rgba(188, 71, 255, 0.4);
-      --accent-secondary: #00f0ff; /* Electric cyan */
+      --accent-secondary: #00f0ff;
+      /* Electric cyan */
       --player-height: 100px;
       --font-main: 'Outfit', sans-serif;
     }
@@ -71,14 +76,14 @@
     }
 
     .blob-1 {
-      background: radial-gradient(circle, var(--accent) 0%, rgba(0,0,0,0) 70%);
+      background: radial-gradient(circle, var(--accent) 0%, rgba(0, 0, 0, 0) 70%);
       top: -10%;
       left: -10%;
       animation-duration: 30s;
     }
 
     .blob-2 {
-      background: radial-gradient(circle, var(--accent-secondary) 0%, rgba(0,0,0,0) 70%);
+      background: radial-gradient(circle, var(--accent-secondary) 0%, rgba(0, 0, 0, 0) 70%);
       bottom: -10%;
       right: -10%;
       animation-duration: 25s;
@@ -86,7 +91,7 @@
     }
 
     .blob-3 {
-      background: radial-gradient(circle, #ff2a74 0%, rgba(0,0,0,0) 70%);
+      background: radial-gradient(circle, #ff2a74 0%, rgba(0, 0, 0, 0) 70%);
       top: 40%;
       left: 30%;
       animation-duration: 35s;
@@ -94,10 +99,21 @@
     }
 
     @keyframes float-around {
-      0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-      33% { transform: translate(10vw, 15vh) scale(1.1) rotate(120deg); }
-      66% { transform: translate(-5vw, 5vh) scale(0.9) rotate(240deg); }
-      100% { transform: translate(0, 0) scale(1) rotate(360deg); }
+      0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+      }
+
+      33% {
+        transform: translate(10vw, 15vh) scale(1.1) rotate(120deg);
+      }
+
+      66% {
+        transform: translate(-5vw, 5vh) scale(0.9) rotate(240deg);
+      }
+
+      100% {
+        transform: translate(0, 0) scale(1) rotate(360deg);
+      }
     }
 
     /* ==========================================================================
@@ -216,12 +232,15 @@
       height: 100%;
       overflow-y: auto;
       scroll-behavior: smooth;
-      padding: 200px 24px; /* Big padding to allow top/bottom lines to center perfectly */
-      scrollbar-width: none; /* Firefox */
+      padding: 200px 24px;
+      /* Big padding to allow top/bottom lines to center perfectly */
+      scrollbar-width: none;
+      /* Firefox */
     }
 
     .lyrics-scroll-box::-webkit-scrollbar {
-      display: none; /* Safari & Chrome */
+      display: none;
+      /* Safari & Chrome */
     }
 
     /* Individual lyric lines */
@@ -349,23 +368,37 @@
       animation-play-state: paused;
     }
 
-    .art-bar:nth-child(2) { animation-delay: 0.15s; }
-    .art-bar:nth-child(3) { animation-delay: 0.3s; }
-    .art-bar:nth-child(4) { animation-delay: 0.45s; }
+    .art-bar:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .art-bar:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    .art-bar:nth-child(4) {
+      animation-delay: 0.45s;
+    }
 
     body.playing .art-bar {
       animation-play-state: running;
     }
 
     @keyframes bounce {
-      0% { transform: scaleY(0.2); }
-      100% { transform: scaleY(1.0); }
+      0% {
+        transform: scaleY(0.2);
+      }
+
+      100% {
+        transform: scaleY(1.0);
+      }
     }
 
     .song-details {
       display: flex;
       flex-direction: column;
-      min-width: 0; /* allows text-overflow ellipsis */
+      min-width: 0;
+      /* allows text-overflow ellipsis */
     }
 
     .song-title {
@@ -698,13 +731,89 @@
     }
 
     /* ==========================================================================
+       6b. YOUTUBE SEARCH MODAL EXTRAS
+       ========================================================================== */
+    .yt-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text-active);
+      font-family: var(--font-main);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .yt-input:focus {
+      border-color: var(--accent-secondary);
+    }
+
+    .yt-result-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .yt-result-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .yt-result-card img {
+      width: 80px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .yt-result-info {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .yt-result-info .r-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .yt-result-info .r-channel {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Hidden YouTube iframe player */
+    #yt-player-container {
+      position: fixed;
+      bottom: -9999px;
+      left: -9999px;
+      width: 1px;
+      height: 1px;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    /* ==========================================================================
        7. MOBILE RESPONSIVENESS
        ========================================================================== */
     @media (max-width: 768px) {
       header {
         padding: 16px;
       }
-      
+
       .brand h1 {
         font-size: 1.25rem;
       }
@@ -737,7 +846,8 @@
       .player-dock {
         width: calc(100% - 24px);
         bottom: 12px;
-        grid-template-columns: 1fr 50px; /* Collapse elements */
+        grid-template-columns: 1fr 50px;
+        /* Collapse elements */
         grid-template-rows: auto auto;
         gap: 8px;
         padding: 12px;
@@ -750,7 +860,8 @@
       }
 
       .player-right {
-        display: none; /* Hide volume controls on mobile - native device buttons usually used */
+        display: none;
+        /* Hide volume controls on mobile - native device buttons usually used */
       }
 
       .player-center {
@@ -777,6 +888,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <!-- Background Canvas circles for smooth colorful glow effects -->
@@ -786,11 +898,8 @@
     <div class="blob blob-3"></div>
   </div>
 
-  <!-- Audio Element -->
-  <audio id="audio-engine" preload="auto">
-    <!-- Default audio placeholder -->
-    <source id="audio-src" src="audio/song.mp3" type="audio/mp3">
-  </audio>
+  <!-- Hidden YouTube IFrame Player container -->
+  <div id="yt-player-container"><div id="yt-player"></div></div>
 
   <!-- Navigation/Header -->
   <header>
@@ -799,9 +908,21 @@
       <p id="song-meta-display">Ready for playback</p>
     </div>
     <div class="header-actions">
+      <button class="btn-secondary" id="open-yt-btn">
+        <!-- YouTube / Search Icon -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        Search YouTube
+      </button>
       <button class="btn-secondary" id="open-importer-btn">
         <!-- Folder Icon -->
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
         Load Song
       </button>
     </div>
@@ -813,7 +934,8 @@
       <div class="lyrics-scroll-box" id="lyrics-viewport">
         <!-- Render empty states until files load or defaults kick in -->
         <div class="empty-state" id="empty-view">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round">
             <path d="M9 18V5l12-2v13"></path>
             <circle cx="6" cy="18" r="3"></circle>
             <circle cx="18" cy="16" r="3"></circle>
@@ -826,7 +948,7 @@
             Play Demo Song
           </button>
         </div>
-        
+
         <!-- Lyric lines are dynamically populated here -->
         <div id="lyrics-lines-container" style="display: none;"></div>
       </div>
@@ -835,7 +957,7 @@
 
   <!-- Custom Styled Audio Control Bar -->
   <footer class="player-dock">
-    
+
     <!-- Left: Song details -->
     <div class="song-info">
       <div class="album-art" id="art-box">
@@ -857,15 +979,22 @@
       <div class="controls-row">
         <!-- Restart Button -->
         <button class="btn-icon" id="btn-restart" title="Restart Song">
-          <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+          </svg>
         </button>
         <!-- Play / Pause Button -->
         <button class="btn-icon btn-play-pause" id="btn-play-pause" title="Play">
-          <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg id="pause-icon" viewBox="0 0 24 24" style="display: none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          <svg id="play-icon" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <svg id="pause-icon" viewBox="0 0 24 24" style="display: none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+          </svg>
         </button>
       </div>
-      
+
       <div class="timeline-row">
         <span class="time-stamp current" id="time-current">0:00</span>
         <div class="slider-container">
@@ -880,12 +1009,53 @@
       <div class="volume-box">
         <!-- Volume Icon -->
         <button class="btn-icon" id="btn-mute" style="width: 28px; height: 28px;">
-          <svg id="volume-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          <svg id="volume-icon" viewBox="0 0 24 24">
+            <path
+              d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+          </svg>
         </button>
         <input type="range" class="range-input" id="volume-slider" min="0" max="1" step="0.05" value="0.8">
       </div>
     </div>
   </footer>
+
+  <!-- YouTube Search Modal -->
+  <div class="modal-overlay" id="yt-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Search YouTube</h2>
+        <button class="close-btn" id="close-yt-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- YouTube Data API key (one-time setup) -->
+      <div style="margin-bottom: 16px;">
+        <input type="password" id="yt-api-key" placeholder="YouTube Data API v3 Key" class="yt-input">
+        <p style="font-size: 0.7rem; color: var(--text-dim); line-height: 1.4; margin-top: 6px;">
+          Get a free key at <strong>console.cloud.google.com</strong> → APIs &amp; Services → YouTube Data API v3.
+          Saved locally in your browser.
+        </p>
+      </div>
+
+      <!-- Search bar -->
+      <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+        <input type="text" id="yt-search-input" placeholder="Search for a song..." class="yt-input"
+          style="flex: 1;">
+        <button class="btn-secondary" id="yt-search-btn">Search</button>
+      </div>
+
+      <!-- Status message (loading / error) -->
+      <p id="yt-status" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 8px;"></p>
+
+      <!-- Search results list -->
+      <div id="yt-results"
+        style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+    </div>
+  </div>
 
   <!-- File Upload Drawer Modal -->
   <div class="modal-overlay" id="importer-modal">
@@ -893,15 +1063,21 @@
       <div class="modal-header">
         <h2>Load Custom Song & Lyrics</h2>
         <button class="close-btn" id="close-modal-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </button>
       </div>
-      
+
       <div class="import-fields">
         <!-- Audio selector -->
         <div class="file-drop-zone" id="audio-dropzone">
           <label>
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
             <span>Select/Drop audio (.mp3, .wav, .m4a)</span>
             <span class="file-name" id="audio-file-label">None selected</span>
           </label>
@@ -911,7 +1087,10 @@
         <!-- Lyrics JSON selector -->
         <div class="file-drop-zone" id="lyrics-dropzone">
           <label>
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
             <span>Select/Drop lyrics (.json)</span>
             <span class="file-name" id="lyrics-file-label">None selected</span>
           </label>
@@ -921,8 +1100,10 @@
 
       <div class="instructions-box">
         <strong>JSON Format requirements:</strong>
-        <p style="margin-top: 4px;">Must contain an array of objects specifying <code>time</code> (seconds) and <code>text</code> (lyrics line):</p>
-        <pre style="margin-top: 6px; font-family: monospace; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 6px; overflow-x: auto; color: #dfa6ff;">[
+        <p style="margin-top: 4px;">Must contain an array of objects specifying <code>time</code> (seconds) and
+          <code>text</code> (lyrics line):</p>
+        <pre
+          style="margin-top: 6px; font-family: monospace; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 6px; overflow-x: auto; color: #dfa6ff;">[
   { "time": 0.0, "text": "🎵 Intro Instrumental 🎵" },
   { "time": 5.2, "text": "First line of the song" }
 ]</pre>
@@ -968,11 +1149,16 @@
     let lastVolume = 0.8;
     let isDraggingSlider = false;
 
+    // YouTube player state
+    let ytPlayer = null;          // YT.Player instance
+    let ytReady = false;          // IFrame API loaded
+    let ytDuration = 0;           // current video duration in seconds
+    let ytSyncInterval = null;    // setInterval handle for 250ms polling
+    let ytPlayerState = -1;       // last known YT.PlayerState value
+
     /* --------------------------------------------------------------------------
        8c. DOM ELEMENT REFERENCES
        -------------------------------------------------------------------------- */
-    const audio = document.getElementById('audio-engine');
-    const audioSource = document.getElementById('audio-src');
     const playPauseBtn = document.getElementById('btn-play-pause');
     const playIcon = document.getElementById('play-icon');
     const pauseIcon = document.getElementById('pause-icon');
@@ -986,19 +1172,29 @@
     const trackTitle = document.getElementById('track-title');
     const trackArtist = document.getElementById('track-artist');
     const songMetaDisplay = document.getElementById('song-meta-display');
-    
+
     // View containers
     const emptyView = document.getElementById('empty-view');
     const lyricsContainer = document.getElementById('lyrics-lines-container');
     const lyricsViewport = document.getElementById('lyrics-viewport');
     const loadDemoBtn = document.getElementById('load-demo-btn');
-    
+
     // Modal controls
     const openImporterBtn = document.getElementById('open-importer-btn');
     const closeImporterBtn = document.getElementById('close-modal-btn');
     const importerModal = document.getElementById('importer-modal');
-    
-    // File inputs
+
+    // YouTube search controls
+    const openYtBtn = document.getElementById('open-yt-btn');
+    const closeYtBtn = document.getElementById('close-yt-btn');
+    const ytModal = document.getElementById('yt-modal');
+    const ytApiKeyInput = document.getElementById('yt-api-key');
+    const ytSearchInput = document.getElementById('yt-search-input');
+    const ytSearchBtn = document.getElementById('yt-search-btn');
+    const ytStatus = document.getElementById('yt-status');
+    const ytResults = document.getElementById('yt-results');
+
+    // File inputs (lyrics-only import — audio now comes from YouTube)
     const audioFileInput = document.getElementById('audio-file-input');
     const lyricsFileInput = document.getElementById('lyrics-file-input');
     const audioFileLabel = document.getElementById('audio-file-label');
@@ -1009,44 +1205,72 @@
     /* --------------------------------------------------------------------------
        8d. INITIALIZATION & SETUP
        -------------------------------------------------------------------------- */
+
+    // Called automatically by the YouTube IFrame API script once it loads
+    function onYouTubeIframeAPIReady() {
+      ytPlayer = new YT.Player('yt-player', {
+        height: '1',
+        width: '1',
+        playerVars: { autoplay: 0, controls: 0, rel: 0, playsinline: 1 },
+        events: {
+          onReady: () => { ytReady = true; ytPlayer.setVolume(lastVolume * 100); },
+          onStateChange: onYtStateChange
+        }
+      });
+    }
+
+    function onYtStateChange(event) {
+      ytPlayerState = event.data;
+      if (event.data === YT.PlayerState.PLAYING) {
+        document.body.classList.add('playing');
+        playIcon.style.display = 'none';
+        pauseIcon.style.display = 'block';
+        ytDuration = ytPlayer.getDuration();
+        playbackSlider.max = Math.floor(ytDuration);
+        timeDuration.textContent = formatTime(ytDuration);
+        startYtSync();
+      } else if (event.data === YT.PlayerState.PAUSED) {
+        document.body.classList.remove('playing');
+        playIcon.style.display = 'block';
+        pauseIcon.style.display = 'none';
+        stopYtSync();
+      } else if (event.data === YT.PlayerState.ENDED) {
+        document.body.classList.remove('playing');
+        playIcon.style.display = 'block';
+        pauseIcon.style.display = 'none';
+        stopYtSync();
+        currentLineIndex = -1;
+        updateActiveLyricLine();
+      }
+    }
+
+    function startYtSync() {
+      stopYtSync();
+      ytSyncInterval = setInterval(handleTimeUpdate, 250);
+    }
+
+    function stopYtSync() {
+      if (ytSyncInterval) { clearInterval(ytSyncInterval); ytSyncInterval = null; }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       setupEventListeners();
       updateSliderBackground(volumeSlider);
       updateSliderBackground(playbackSlider);
-      
+
       // Default info labels
-      trackTitle.textContent = "Song Placeholder";
-      trackArtist.textContent = "Replace with audio/song.mp3";
+      trackTitle.textContent = "No Video Loaded";
+      trackArtist.textContent = "Search YouTube to begin";
     });
 
     /* --------------------------------------------------------------------------
        8e. EVENT BINDING
        -------------------------------------------------------------------------- */
     function setupEventListeners() {
-      // Audio Engine Events
-      audio.addEventListener('timeupdate', handleTimeUpdate);
-      audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.addEventListener('play', () => {
-        document.body.classList.add('playing');
-        playIcon.style.display = 'none';
-        pauseIcon.style.display = 'block';
-      });
-      audio.addEventListener('pause', () => {
-        document.body.classList.remove('playing');
-        playIcon.style.display = 'block';
-        pauseIcon.style.display = 'none';
-      });
-      audio.addEventListener('volumechange', syncVolumeUI);
-      audio.addEventListener('ended', () => {
-        audio.pause();
-        audio.currentTime = 0;
-        updateActiveLyricLine();
-      });
-
-      // Custom Media Player Controls
+      // Custom Media Player Controls → wired to YouTube player
       playPauseBtn.addEventListener('click', togglePlay);
       restartBtn.addEventListener('click', restartPlayback);
-      
+
       // Seeker Inputs
       playbackSlider.addEventListener('input', (e) => {
         isDraggingSlider = true;
@@ -1054,14 +1278,20 @@
         updateSliderBackground(playbackSlider);
       });
       playbackSlider.addEventListener('change', (e) => {
-        audio.currentTime = e.target.value;
+        if (ytReady && ytPlayer && ytDuration > 0) {
+          ytPlayer.seekTo(parseFloat(e.target.value), true);
+        }
         isDraggingSlider = false;
       });
 
-      // Volume Slider
+      // Volume Slider → YouTube player volume (0–100)
       volumeSlider.addEventListener('input', (e) => {
-        audio.volume = e.target.value;
-        isMuted = (audio.volume === 0);
+        lastVolume = parseFloat(e.target.value);
+        if (ytReady && ytPlayer) {
+          ytPlayer.setVolume(isMuted ? 0 : lastVolume * 100);
+        }
+        isMuted = (lastVolume === 0);
+        syncVolumeUI();
       });
       muteBtn.addEventListener('click', toggleMute);
 
@@ -1071,113 +1301,221 @@
       // Modal Open/Close
       openImporterBtn.addEventListener('click', () => importerModal.classList.add('open'));
       closeImporterBtn.addEventListener('click', () => importerModal.classList.remove('open'));
-      
-      // Click outside modal card to close
       importerModal.addEventListener('click', (e) => {
-        if (e.target === importerModal) {
-          importerModal.classList.remove('open');
-        }
+        if (e.target === importerModal) importerModal.classList.remove('open');
       });
 
-      // Custom File Selection Event Handlers
+      // File Selection Event Handlers (lyrics JSON only for YouTube mode)
       audioFileInput.addEventListener('change', handleAudioUpload);
       lyricsFileInput.addEventListener('change', handleLyricsUpload);
-
-      // Drag and Drop Effects
       setupDragDrop(audioDropzone, audioFileInput);
       setupDragDrop(lyricsDropzone, lyricsFileInput);
+
+      // YouTube Search Modal Open/Close
+      openYtBtn.addEventListener('click', () => {
+        ytModal.classList.add('open');
+        ytApiKeyInput.value = localStorage.getItem('yt_api_key') || '';
+      });
+      closeYtBtn.addEventListener('click', () => ytModal.classList.remove('open'));
+      ytModal.addEventListener('click', (e) => {
+        if (e.target === ytModal) ytModal.classList.remove('open');
+      });
+
+      // Trigger YouTube search on button click or Enter key
+      ytSearchBtn.addEventListener('click', runYouTubeSearch);
+      ytSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') runYouTubeSearch();
+      });
     }
 
     /* --------------------------------------------------------------------------
-       8f. AUDIO CONTROL LOGIC
+       8f-bis. YOUTUBE SEARCH & PLAYBACK
        -------------------------------------------------------------------------- */
-    function togglePlay() {
-      // If audio is empty or load fails, auto-alert to load
-      if (!audio.src || audio.src.includes('audio/song.mp3') && audio.readyState === 0) {
-        // Attempt a load first. If it fails, fall back to offering the demo track
-        audio.play().catch(err => {
-          showDemoChoiceAlert();
-        });
-      } else {
-        if (audio.paused) {
-          audio.play().catch(e => console.error("Playback failed:", e));
-        } else {
-          audio.pause();
+
+    /**
+     * Calls YouTube Data API v3 /search to find videos matching the query.
+     */
+    async function runYouTubeSearch() {
+      const query = ytSearchInput.value.trim();
+      if (!query) return;
+
+      const apiKey = ytApiKeyInput.value.trim();
+      if (!apiKey) {
+        ytStatus.textContent = 'Please enter your YouTube Data API v3 key above.';
+        return;
+      }
+
+      // Persist key for next session
+      localStorage.setItem('yt_api_key', apiKey);
+
+      ytResults.innerHTML = '';
+      ytStatus.textContent = 'Searching...';
+
+      try {
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=10&key=${encodeURIComponent(apiKey)}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `YouTube API error (${response.status})`);
         }
+
+        const data = await response.json();
+        const items = data.items || [];
+
+        if (items.length === 0) {
+          ytStatus.textContent = 'No results found. Try a different search.';
+          return;
+        }
+
+        ytStatus.textContent = `${items.length} result(s):`;
+        renderYouTubeResults(items);
+
+      } catch (err) {
+        console.error('YouTube Search Error:', err);
+        ytStatus.textContent = err.message || 'Search failed. Check your API key and internet connection.';
       }
     }
 
-    // Restart the song from the beginning
-    function restartPlayback() {
-      audio.currentTime = 0;
-      if (audio.paused) {
-        audio.play().catch(e => console.error(e));
+    /**
+     * Renders YouTube video results as clickable cards.
+     */
+    function renderYouTubeResults(items) {
+      ytResults.innerHTML = '';
+
+      items.forEach(item => {
+        const videoId = item.id.videoId;
+        const title = item.snippet.title;
+        const channel = item.snippet.channelTitle;
+        const thumb = item.snippet.thumbnails.default.url;
+
+        const card = document.createElement('div');
+        card.className = 'yt-result-card';
+        card.innerHTML = `
+          <img src="${thumb}" alt="${title}">
+          <div class="yt-result-info">
+            <span class="r-title">${title}</span>
+            <span class="r-channel">${channel}</span>
+          </div>
+        `;
+        card.addEventListener('click', () => selectYouTubeVideo(videoId, title, channel));
+        ytResults.appendChild(card);
+      });
+    }
+
+    /**
+     * Loads the selected YouTube video into the hidden IFrame player,
+     * updates the player UI, and sets placeholder lyrics.
+     */
+    function selectYouTubeVideo(videoId, title, channel) {
+      if (!ytReady || !ytPlayer) {
+        ytStatus.textContent = 'Player not ready yet. Please wait a moment and try again.';
+        return;
       }
+
+      trackTitle.textContent = title;
+      trackArtist.textContent = channel;
+      songMetaDisplay.textContent = `YouTube — ${title}`;
+
+      // Reset duration display until onStateChange fires
+      ytDuration = 0;
+      playbackSlider.max = 100;
+      playbackSlider.value = 0;
+      timeCurrent.textContent = '0:00';
+      timeDuration.textContent = '0:00';
+      updateSliderBackground(playbackSlider);
+
+      // Placeholder lyrics — user can load a matching lyrics.json via 'Load Song'
+      lyrics = [
+        { time: 0, text: `🎵 ${title} 🎵` },
+        { time: 3, text: `${channel}` },
+        { time: 6, text: "Load a lyrics.json via 'Load Song' for full sync." }
+      ];
+      renderLyrics();
+
+      ytModal.classList.remove('open');
+
+      // Load & auto-play in the hidden player
+      ytPlayer.loadVideoById(videoId);
+    }
+
+    /* --------------------------------------------------------------------------
+       8f. PLAYBACK CONTROL LOGIC (wired to YouTube IFrame Player)
+       -------------------------------------------------------------------------- */
+
+    function togglePlay() {
+      if (!ytReady || !ytPlayer) { showDemoChoiceAlert(); return; }
+      const state = ytPlayer.getPlayerState();
+      if (state === YT.PlayerState.PLAYING) {
+        ytPlayer.pauseVideo();
+      } else {
+        ytPlayer.playVideo();
+      }
+    }
+
+    function restartPlayback() {
+      if (!ytReady || !ytPlayer) return;
+      ytPlayer.seekTo(0, true);
+      ytPlayer.playVideo();
     }
 
     function toggleMute() {
+      if (!ytReady || !ytPlayer) return;
       if (isMuted) {
-        audio.volume = lastVolume;
+        ytPlayer.setVolume(lastVolume * 100);
         isMuted = false;
       } else {
-        lastVolume = audio.volume;
-        audio.volume = 0;
+        lastVolume = ytPlayer.getVolume() / 100;
+        ytPlayer.setVolume(0);
         isMuted = true;
       }
+      syncVolumeUI();
     }
 
     function syncVolumeUI() {
-      volumeSlider.value = audio.volume;
+      const vol = isMuted ? 0 : lastVolume;
+      volumeSlider.value = vol;
       updateSliderBackground(volumeSlider);
-      
-      if (audio.volume === 0) {
-        // Mute Icon SVG
+
+      if (vol === 0) {
         volumeIcon.innerHTML = `<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>`;
-      } else if (audio.volume < 0.5) {
-        // Medium Volume Icon SVG
+      } else if (vol < 0.5) {
         volumeIcon.innerHTML = `<path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/>`;
       } else {
-        // Loud Volume Icon SVG
         volumeIcon.innerHTML = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
       }
     }
 
-    function handleLoadedMetadata() {
-      playbackSlider.max = Math.floor(audio.duration);
-      timeDuration.textContent = formatTime(audio.duration);
-      updateSliderBackground(playbackSlider);
-    }
-
     /* --------------------------------------------------------------------------
-       8g. SYNC LOGIC (The Core Feature)
+       8g. SYNC LOGIC — polls YouTube player.getCurrentTime() every 250 ms
        -------------------------------------------------------------------------- */
-    
+
     /**
-     * timeupdate Event Handler:
-     * This fires multiple times a second as the track progresses.
-     * We match `audio.currentTime` with the lyrics dataset to select
-     * the active sentence and trigger the visual animations.
+     * Called by setInterval every 250 ms while the video is playing.
+     * Reads the current playhead from the YouTube IFrame player,
+     * updates the seeker bar, and highlights the matching lyric line.
      */
     function handleTimeUpdate() {
-      if (isDraggingSlider) return;
+      if (isDraggingSlider || !ytReady || !ytPlayer) return;
 
-      const currentTime = audio.currentTime;
-      
+      let currentTime = 0;
+      try { currentTime = ytPlayer.getCurrentTime() || 0; } catch (e) { return; }
+
       // Update custom Seeker Bar UI
       playbackSlider.value = Math.floor(currentTime);
       timeCurrent.textContent = formatTime(currentTime);
       updateSliderBackground(playbackSlider);
 
       // Search for the current active lyric line index.
-      // We look for the lyric line whose 'time' stamp is less than or equal to the current playback head
+      // We look for the lyric line whose 'time' stamp is ≤ current playback head
       // and which has the highest timestamp value among all such elements.
       let matchingIndex = -1;
-      
+
       for (let i = 0; i < lyrics.length; i++) {
         if (currentTime >= lyrics[i].time) {
           matchingIndex = i;
         } else {
-          break; // Since our array is sorted by 'time', we can exit early.
+          break; // Array is sorted by time — exit early.
         }
       }
 
@@ -1199,7 +1537,7 @@
       lines.forEach((line, index) => {
         if (index === currentLineIndex) {
           line.classList.add('active');
-          
+
           // Smooth scroll the active element into the vertical center of the scroll view
           line.scrollIntoView({
             behavior: 'smooth',
@@ -1216,7 +1554,7 @@
      */
     function renderLyrics() {
       lyricsContainer.innerHTML = '';
-      
+
       if (!lyrics || lyrics.length === 0) {
         emptyView.style.display = 'flex';
         lyricsContainer.style.display = 'none';
@@ -1229,24 +1567,24 @@
       lyrics.forEach((line, index) => {
         const div = document.createElement('div');
         div.className = 'lyric-line';
-        
+
         // Detect instrumental flags
         if (line.text.includes('🎵') || line.text.includes('(Instrumental)')) {
           div.classList.add('instrumental');
         }
-        
+
         div.id = `lyric-line-${index}`;
         div.textContent = line.text;
-        
+
         // INTERACTIVE SEEKING:
-        // Clicking any line instantly updates the player's timestamp to sync with that line.
+        // Clicking any line instantly seeks the YouTube player to that timestamp.
         div.addEventListener('click', () => {
-          audio.currentTime = line.time;
-          // Trigger instant highlight updates
-          handleTimeUpdate();
-          if (audio.paused) {
-            audio.play().catch(err => console.error("Playback start error:", err));
+          if (ytReady && ytPlayer && ytDuration > 0) {
+            ytPlayer.seekTo(line.time, true);
+            ytPlayer.playVideo();
           }
+          // Trigger instant highlight update
+          handleTimeUpdate();
         });
 
         lyricsContainer.appendChild(div);
@@ -1260,7 +1598,7 @@
     /* --------------------------------------------------------------------------
        8h. EXTERNAL FILE IMPORTERS & DEMO LOADER
        -------------------------------------------------------------------------- */
-    
+
     /**
      * Configures drag-over and drop styles for files.
      */
@@ -1286,25 +1624,15 @@
     }
 
     /**
-     * Parses uploaded local MP3 binary files to object URLs.
+     * handleAudioUpload — kept for compatibility with the Load Song modal UI
+     * but not used for playback in YouTube mode. The audio file field remains
+     * visible in the UI so users can reference local audio while building
+     * their lyrics JSON timestamps.
      */
     function handleAudioUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
-
       audioFileLabel.textContent = file.name;
-      
-      // Convert browser file handle to object URI source
-      const fileURL = URL.createObjectURL(file);
-      audio.src = fileURL;
-      audio.load();
-
-      // Update player titles
-      const cleanName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-      trackTitle.textContent = cleanName;
-      trackArtist.textContent = "Local Audio File";
-      songMetaDisplay.textContent = `File: ${file.name}`;
-      
       // Auto close importer if lyrics are also parsed
       checkAutoCloseModal();
     }
@@ -1319,25 +1647,25 @@
       lyricsFileLabel.textContent = file.name;
 
       const reader = new FileReader();
-      reader.onload = function(event) {
+      reader.onload = function (event) {
         try {
           const parsed = JSON.parse(event.target.result);
-          
+
           // Validate schema
           if (Array.isArray(parsed) && parsed.every(item => 'time' in item && 'text' in item)) {
             // Sort array ascending by time
             lyrics = parsed.sort((a, b) => a.time - b.time);
-            
+
             // Re-render
             renderLyrics();
-            
+
             // Auto close modal if audio is also ready
             checkAutoCloseModal();
           } else {
             alert("Invalid JSON format! Must be an array of structures: { time: Number, text: String }");
             lyricsFileLabel.textContent = "Invalid format";
           }
-        } catch(err) {
+        } catch (err) {
           alert("Error parsing JSON: " + err.message);
           lyricsFileLabel.textContent = "Error parsing file";
         }
@@ -1355,25 +1683,27 @@
     }
 
     /**
-     * Triggers online fallback demo playback.
+     * Loads the demo YouTube video (royalty-free Bensound track) with placeholder lyrics.
      */
     function loadDemoPlayback() {
-      trackTitle.textContent = "SoundHelix Song 1";
-      trackArtist.textContent = "SoundHelix (Royalty-free)";
-      songMetaDisplay.textContent = "Demo Song (Requires Internet)";
-      
+      if (!ytReady || !ytPlayer) {
+        alert('YouTube player is still loading. Please wait a moment and try again.');
+        return;
+      }
+
+      trackTitle.textContent = "Demo — Royalty Free Music";
+      trackArtist.textContent = "Bensound";
+      songMetaDisplay.textContent = "Demo Song (YouTube)";
+
       lyrics = [...DEFAULT_LYRICS];
       renderLyrics();
 
-      audio.src = DEMO_AUDIO_URL;
-      audio.load();
-      audio.play().catch(e => {
-        alert("Unable to play demo audio URL. Please check your internet connection or upload local files.");
-      });
+      // Load a known public royalty-free YouTube video as the demo
+      ytPlayer.loadVideoById('ydqFM4ZgIyY'); // Bensound - Ukulele (royalty-free)
     }
 
     function showDemoChoiceAlert() {
-      if (confirm("Default 'audio/song.mp3' file not found.\n\nWould you like to play the interactive Demo Song (loads online audio automatically) instead?")) {
+      if (confirm('No video loaded yet.\n\nClick OK to load the Demo Song on YouTube, or Cancel to use the Search YouTube button to find your own song.')) {
         loadDemoPlayback();
       }
     }
@@ -1381,7 +1711,7 @@
     /* --------------------------------------------------------------------------
        8i. UTILITIES & MATH
        -------------------------------------------------------------------------- */
-    
+
     /**
      * Formats duration/time seconds integer/float to mm:ss notation.
      */
@@ -1400,10 +1730,11 @@
       const max = slider.max || 100;
       const value = slider.value;
       const percent = ((value - min) / (max - min)) * 100;
-      
+
       // Paint neon colored tracking trace line
       slider.style.backgroundImage = `linear-gradient(to right, var(--accent-secondary) 0%, var(--accent-secondary) ${percent}%, rgba(255, 255, 255, 0.15) ${percent}%, rgba(255, 255, 255, 0.15) 100%)`;
     }
   </script>
 </body>
+
 </html>
