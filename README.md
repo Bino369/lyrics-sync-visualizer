@@ -5,7 +5,6 @@ A premium, interactive, Apple Music-style lyrics visualizer web app built with *
 Check out the live demo on [GitHub Pages](https://bino369.github.io/lyrics-sync-visualizer/) *(after enabling Pages)*.
 
 ---
-
  
 ## ✨ Features
 
