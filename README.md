@@ -6,6 +6,7 @@ Check out the live demo on [GitHub Pages](https://bino369.github.io/lyrics-sync-
 
 ---
 
+ 
 ## ✨ Features
 
 - **Fluid Ambient Background:** Dynamic, animated colored gradients that morph smoothly in the background, drawing inspiration from Apple Music's lyrics interface.
