@@ -108,3 +108,5 @@ The lyrics file must be a standard JSON array containing objects with `time` (in
 <!-- update 19 -->
 
 <!-- update 20 -->
+
+<!-- update 21 -->
