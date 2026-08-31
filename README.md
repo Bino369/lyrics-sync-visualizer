@@ -70,3 +70,5 @@ The lyrics file must be a standard JSON array containing objects with `time` (in
 7. Your page will be live at `https://<your-username>.github.io/<repository-name>/` in a minute!
 
 <!-- update batch 3 - 1 -->
+
+<!-- update batch 3 - 2 -->
