@@ -68,3 +68,4 @@ The lyrics file must be a standard JSON array containing objects with `time` (in
 5. Under *Build and deployment*, set the Source to **Deploy from a branch**.
 6. Select the **`main`** branch and the **`/ (root)`** folder, then click **Save**.
 7. Your page will be live at `https://<your-username>.github.io/<repository-name>/` in a minute!
+<!-- trigger update Mon Aug 31 21:26:16 IST 2026 -->
